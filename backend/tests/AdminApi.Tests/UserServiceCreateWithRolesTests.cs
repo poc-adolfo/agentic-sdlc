@@ -53,7 +53,7 @@ public class UserServiceCreateWithRolesTests : IAsyncLifetime
         var hasher = new PasswordHasher<User>();
         return new UserManager<User>(
             userStore,
-            new IdentityOptions(),
+            Microsoft.Extensions.Options.Options.Create(new IdentityOptions()),
             hasher,
             validators,
             passwordValidators,
