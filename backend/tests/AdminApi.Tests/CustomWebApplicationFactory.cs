@@ -1,3 +1,6 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -19,11 +22,21 @@ public class CustomWebApplicationFactory : WebApplicationFactory<global::Program
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+
+        // UseSetting writes directly to the IWebHostBuilder settings and makes
+        // the test signing key available early enough for minimal-hosting
+        // configuration (Program.cs) before appsettings.json can supply its
+        // intentionally empty production value.
+        builder.UseSetting("Jwt:Key", "TestJwtSigningKey_Min32Chars_Enough!!");
+
         builder.ConfigureAppConfiguration((_, cfg) =>
         {
             cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ALLOW_ADMIN_BOOTSTRAP"] = AllowBootstrap ? "true" : "false",
+                // Keep this override for components that read the application
+                // configuration after the host has been built.
+                ["Jwt:Key"] = "TestJwtSigningKey_Min32Chars_Enough!!",
             });
         });
         builder.ConfigureTestServices(services =>
