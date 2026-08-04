@@ -10,5 +10,9 @@ WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+# JWT — override em produção via secrets/variável do orquestrador.
+ENV Jwt:Key=change-me-in-production-at-least-32-characters-long-please
+ENV Jwt:Issuer=admin-api
+ENV Jwt:Audience=admin-mobile
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "AdminApi.dll"]
