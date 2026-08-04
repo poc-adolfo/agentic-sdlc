@@ -65,39 +65,46 @@ public class UserService : IUserService
 
     public async Task<UserDetail?> CreateAsync(CreateUserDto dto, Guid actingUserId)
     {
-        // Validação antecipada dos roleIds informados: falha antes de
-        // criar o usuário para não deixar entidade órfã em caso de erro.
+        // Validate role IDs before opening the write transaction so invalid input
+        // cannot create a user or leave any partial state behind.
         List<Guid> roleIds = dto.RoleIds is null || dto.RoleIds.Count == 0
             ? new()
             : await ResolveAndValidateRoleIdsAsync(dto.RoleIds);
 
-        var user = new User { UserName = dto.Email, Email = dto.Email, Name = dto.Name };
-        var result = await _users.CreateAsync(user, dto.Password);
-        if (!result.Succeeded)
-            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(e => e.Description)));
-
-        // Atribuição dos papéis acontece na mesma transação de criação
-        // (commit único em SaveChangesAsync). Se roleIds for vazio, nada
-        // é gravado em user_roles — comportamento anterior preservado.
-        if (roleIds.Count > 0)
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        try
         {
-            var now = DateTime.UtcNow;
-            foreach (var roleId in roleIds)
+            var user = new User { UserName = dto.Email, Email = dto.Email, Name = dto.Name };
+            var result = await _users.CreateAsync(user, dto.Password);
+            if (!result.Succeeded)
+                throw new InvalidOperationException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            if (roleIds.Count > 0)
             {
-                _db.UserRolesExplicit.Add(new UserRole
+                var now = DateTime.UtcNow;
+                foreach (var roleId in roleIds)
                 {
-                    UserId = user.Id,
-                    RoleId = roleId,
-                    GrantedAt = now,
-                    GrantedBy = actingUserId,
-                });
+                    _db.UserRolesExplicit.Add(new UserRole
+                    {
+                        UserId = user.Id,
+                        RoleId = roleId,
+                        GrantedAt = now,
+                        GrantedBy = actingUserId,
+                    });
+                }
+                await _db.SaveChangesAsync();
             }
-            await _db.SaveChangesAsync();
+
+            await transaction.CommitAsync();
             _log.LogInformation("User {UserId} created with {Count} role(s) by {Actor}",
                 user.Id, roleIds.Count, actingUserId);
+            return await GetAsync(user.Id);
         }
-
-        return await GetAsync(user.Id);
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     /// <summary>
