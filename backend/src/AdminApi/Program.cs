@@ -121,3 +121,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Expoe a classe Program (gerada implicitamente como internal pelos top-level statements)
+// como public partial, permitindo que WebApplicationFactory<Program> a referencie de
+// fora do assembly (necessario para testes de integracao em AdminApi.Tests).
+public partial class Program { }

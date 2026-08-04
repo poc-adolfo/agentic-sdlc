@@ -1,0 +1,39 @@
+name: Backend CI (.NET)
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  build:
+    name: Build & Test (.NET)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore AdminApi.sln
+
+      - name: Build (Release)
+        run: dotnet build AdminApi.sln --no-restore -c Release
+
+      - name: Test (Release)
+        run: dotnet test AdminApi.sln --no-build -c Release --verbosity normal

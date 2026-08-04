@@ -19,11 +19,21 @@ public class CustomWebApplicationFactory : WebApplicationFactory<global::Program
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+
+        // UseSetting is applied to the IWebHostBuilder before the minimal-hosting
+        // application builds its configuration. This is required for settings
+        // consumed while Program.cs is registering JWT authentication.
+        builder.UseSetting("ALLOW_ADMIN_BOOTSTRAP", AllowBootstrap ? "true" : "false");
+        builder.UseSetting("Jwt:Key", "TestJwtSigningKey_Min32Chars_Enough!!");
+
+        // Keep the in-memory provider as a fallback for values consumed later by
+        // the application and test services.
         builder.ConfigureAppConfiguration((_, cfg) =>
         {
             cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ALLOW_ADMIN_BOOTSTRAP"] = AllowBootstrap ? "true" : "false",
+                ["Jwt:Key"] = "TestJwtSigningKey_Min32Chars_Enough!!",
             });
         });
         builder.ConfigureTestServices(services =>
