@@ -83,8 +83,9 @@ public class RoleService : IRoleService
         if (r is null) return false;
 
         // Papéis is_system ficam em modo somente-leitura / aviso reforçado (seção 5).
-        // Aqui permitimos apenas adicionar — nunca remover — para não travar a administração.
-        // O aviso é responsabilidade da UI; o backend loga a operação.
+        // Aqui sincronizamos as permissões (adiciona e remove conforme a lista
+        // desejada) e logamos um aviso quando o papel é is_system. O aviso reforçado
+        // é responsabilidade da UI; o backend loga a operação.
         if (r.IsSystem)
             _log.LogWarning("Modifying permissions of SYSTEM role {RoleId} by {Actor}", id, actingUserId);
 

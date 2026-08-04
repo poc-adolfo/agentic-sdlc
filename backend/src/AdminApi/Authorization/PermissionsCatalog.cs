@@ -10,18 +10,20 @@ public static class PermissionsCatalog
     public const string UsersCreate = "users:create";
     public const string UsersEdit = "users:edit";
     public const string UsersDisable = "users:disable";
-    public const string RolesManage = "roles:manage";
-    public const string PermissionsAssign = "permissions:assign";
-    public const string RolesAssign = "roles:assign";
     public const string UsersList = "users:list";
     public const string UsersView = "users:view";
+    public const string RolesManage = "roles:manage";
+    public const string RolesList = "roles:list";
+    public const string RolesView = "roles:view";
+    public const string PermissionsAssign = "permissions:assign";
+    public const string RolesAssign = "roles:assign";
 
     /// <summary>Todas as permissões do catálogo, usado para registrar policies dinamicamente.</summary>
     public static readonly string[] All =
     {
-        UsersCreate, UsersEdit, UsersDisable,
-        RolesManage, PermissionsAssign, RolesAssign,
-        UsersList, UsersView,
+        UsersCreate, UsersEdit, UsersDisable, UsersList, UsersView,
+        RolesManage, RolesList, RolesView,
+        PermissionsAssign, RolesAssign,
     };
 
     /// <summary>Descrição humana de cada permissão, usada no seed da tabela permissions.</summary>
@@ -30,10 +32,12 @@ public static class PermissionsCatalog
         [UsersCreate] = "Criar usuários",
         [UsersEdit] = "Editar dados de usuários e atribuir papéis",
         [UsersDisable] = "Desativar/reativar usuários (soft-delete)",
-        [RolesManage] = "Criar, editar e excluir papéis",
-        [PermissionsAssign] = "Compor permissões de um papel",
-        [RolesAssign] = "Atribuir papéis a usuários",
         [UsersList] = "Listar e buscar usuários",
         [UsersView] = "Ver detalhes de um usuário",
+        [RolesManage] = "Criar, editar e excluir papéis",
+        [RolesList] = "Listar e buscar papéis",
+        [RolesView] = "Ver detalhes de um papel",
+        [PermissionsAssign] = "Compor permissões de um papel",
+        [RolesAssign] = "Atribuir papéis a usuários",
     };
 }

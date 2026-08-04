@@ -47,7 +47,9 @@ public class UsersController : ControllerBase
         try
         {
             var u = await _users.CreateAsync(dto, ActingUserId);
-            return u is null ? NotFound() : CreatedAtAction(nameof(Get), new { id = u.Id }, u);
+            return u is null
+                ? BadRequest(new { error = "Failed to create user" })
+                : CreatedAtAction(nameof(Get), new { id = u.Id }, u);
         }
         catch (InvalidOperationException ex)
         {

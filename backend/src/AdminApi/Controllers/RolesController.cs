@@ -20,7 +20,7 @@ public class RolesController : ControllerBase
     private Guid ActingUserId => Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
     [HttpGet]
-    [HasPermission(PermissionsCatalog.UsersList)]
+    [HasPermission(PermissionsCatalog.RolesList)]
     public async Task<IActionResult> List()
     {
         var list = await _roles.ListAsync();
@@ -28,7 +28,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [HasPermission(PermissionsCatalog.UsersView)]
+    [HasPermission(PermissionsCatalog.RolesView)]
     public async Task<IActionResult> Get(Guid id)
     {
         var r = await _roles.GetAsync(id);
@@ -39,8 +39,17 @@ public class RolesController : ControllerBase
     [HasPermission(PermissionsCatalog.RolesManage)]
     public async Task<IActionResult> Create([FromBody] CreateRoleDto dto)
     {
-        var r = await _roles.CreateAsync(dto, ActingUserId);
-        return r is null ? NotFound() : CreatedAtAction(nameof(Get), new { id = r.Id }, r);
+        try
+        {
+            var r = await _roles.CreateAsync(dto, ActingUserId);
+            return r is null
+                ? BadRequest(new { error = "Failed to create role" })
+                : CreatedAtAction(nameof(Get), new { id = r.Id }, r);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]
