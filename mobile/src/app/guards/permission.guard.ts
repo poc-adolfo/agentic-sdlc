@@ -14,6 +14,8 @@ export const PERMISSIONS = {
   RolesManage: 'roles:manage',
   PermissionsAssign: 'permissions:assign',
   RolesAssign: 'roles:assign',
+  RolesList: 'roles:list',
+  RolesView: 'roles:view',
   UsersList: 'users:list',
   UsersView: 'users:view',
 } as const;
