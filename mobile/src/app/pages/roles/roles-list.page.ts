@@ -1,12 +1,14 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { IonContent, IonList, IonItem, IonLabel, IonButton, IonChip, IonText } from '@ionic/angular/standalone';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { IonContent, IonList, IonItem, IonLabel, IonButton, IonChip, IonText, IonInput } from '@ionic/angular/standalone';
 import { ApiService, RoleListItem } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-roles-list',
   standalone: true,
-  imports: [IonContent, IonList, IonItem, IonLabel, IonButton, IonChip, IonText],
+  imports: [FormsModule, RouterLink, IonContent, IonList, IonItem, IonLabel, IonButton, IonChip, IonText, IonInput],
   template: `
     <ion-content class="ion-padding">
       <h2>Papéis</h2>

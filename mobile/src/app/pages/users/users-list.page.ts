@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { IonContent, IonList, IonItem, IonLabel, IonSearchbar, IonSelect, IonSelectOption, IonButton, IonChip, IonText } from '@ionic/angular/standalone';
 import { ApiService, UserListItem, PagedResult } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
@@ -7,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-users-list',
   standalone: true,
-  imports: [FormsModule, IonContent, IonList, IonItem, IonLabel, IonSearchbar, IonSelect, IonSelectOption, IonButton, IonChip, IonText],
+  imports: [FormsModule, RouterLink, IonContent, IonList, IonItem, IonLabel, IonSearchbar, IonSelect, IonSelectOption, IonButton, IonChip, IonText],
   template: `
     <ion-content class="ion-padding">
       <ion-searchbar placeholder="Buscar por nome ou e-mail" [(ngModel)]="search" (ionInput)="onSearch()"></ion-searchbar>
