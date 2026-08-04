@@ -121,3 +121,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Expoe a classe 'Program' (gerada implicitamente pelos top-level statements como internal)
+// como public partial, permitindo que WebApplicationFactory<Program> a referencie de fora
+// do assembly (necessario para testes de integracao). Padrao comum em projetos ASP.NET Core.
+public partial class Program { }
