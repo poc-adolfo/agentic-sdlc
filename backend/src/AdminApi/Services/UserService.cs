@@ -65,11 +65,60 @@ public class UserService : IUserService
 
     public async Task<UserDetail?> CreateAsync(CreateUserDto dto, Guid actingUserId)
     {
+        // Validação antecipada dos roleIds informados: falha antes de
+        // criar o usuário para não deixar entidade órfã em caso de erro.
+        List<Guid> roleIds = dto.RoleIds is null || dto.RoleIds.Count == 0
+            ? new()
+            : await ResolveAndValidateRoleIdsAsync(dto.RoleIds);
+
         var user = new User { UserName = dto.Email, Email = dto.Email, Name = dto.Name };
         var result = await _users.CreateAsync(user, dto.Password);
         if (!result.Succeeded)
             throw new InvalidOperationException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+        // Atribuição dos papéis acontece na mesma transação de criação
+        // (commit único em SaveChangesAsync). Se roleIds for vazio, nada
+        // é gravado em user_roles — comportamento anterior preservado.
+        if (roleIds.Count > 0)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var roleId in roleIds)
+            {
+                _db.UserRolesExplicit.Add(new UserRole
+                {
+                    UserId = user.Id,
+                    RoleId = roleId,
+                    GrantedAt = now,
+                    GrantedBy = actingUserId,
+                });
+            }
+            await _db.SaveChangesAsync();
+            _log.LogInformation("User {UserId} created with {Count} role(s) by {Actor}",
+                user.Id, roleIds.Count, actingUserId);
+        }
+
         return await GetAsync(user.Id);
+    }
+
+    /// <summary>
+    /// Garante que todos os roleIds fornecidos existem e retorna a lista
+    /// deduplicada. Lança <see cref="InvalidOperationException"/> se algum
+    /// papel não for encontrado — o controller converte isso em 400.
+    /// </summary>
+    private async Task<List<Guid>> ResolveAndValidateRoleIdsAsync(List<Guid> roleIds)
+    {
+        var distinct = roleIds.Distinct().ToList();
+        var found = await _db.Roles
+            .Where(r => distinct.Contains(r.Id))
+            .Select(r => r.Id)
+            .ToListAsync();
+        if (found.Count != distinct.Count)
+        {
+            var missing = distinct.Except(found).ToList();
+            throw new InvalidOperationException(
+                $"Role(s) not found: {string.Join(", ", missing.Select(g => g.ToString()))}");
+        }
+        return distinct;
     }
 
     public async Task<UserDetail?> UpdateAsync(Guid id, UpdateUserDto dto, Guid actingUserId)

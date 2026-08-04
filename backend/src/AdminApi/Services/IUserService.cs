@@ -16,7 +16,15 @@ public interface IUserService
 public record UserListItem(Guid Id, string Name, string Email, string Status, List<string> Roles);
 public record UserDetail(Guid Id, string Name, string Email, string Status,
     DateTime CreatedAt, DateTime? LastLoginAt, List<string> Roles, List<string> EffectivePermissions);
-public record CreateUserDto(string Name, string Email, string Password);
+
+/// <summary>
+/// Corpo do POST /api/users. <see cref="RoleIds"/> é opcional: quando
+/// fornecido (e não vazio), o usuário recém-criado é associado a esses
+/// papéis na mesma operação/transação da criação (tarefa 1 da spec,
+/// issue #16). Quando ausente ou vazio, o comportamento atual é
+/// preservado (usuário criado sem nenhum papel).
+/// </summary>
+public record CreateUserDto(string Name, string Email, string Password, List<Guid>? RoleIds = null);
 public record UpdateUserDto(string Name, string Email);
 public record AssignRolesDto(List<Guid> RoleIds);
 public record UserFilter(string? Name, string? Email, string? Status, string? Role);
