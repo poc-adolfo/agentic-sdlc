@@ -1,3 +1,6 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -24,6 +27,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<global::Program
             cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ALLOW_ADMIN_BOOTSTRAP"] = AllowBootstrap ? "true" : "false",
+                // Chave de assinatura JWT para os testes de integração.
+                // Em Development o appsettings vem vazio (""), o que inviabiliza
+                // a emissão de tokens — aqui garantimos uma chave válida fixa.
+                ["Jwt:Key"] = "TestJwtSigningKey_Min32Chars_Enough!!",
             });
         });
         builder.ConfigureTestServices(services =>
