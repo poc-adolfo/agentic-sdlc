@@ -24,10 +24,15 @@ services:
       Jwt__Key: "dev-compose-not-for-production-use-at-least-32-chars!!"
       Jwt__Issuer: "admin-api"
       Jwt__Audience: "admin-mobile"
-      ALLOW_ADMIN_BOOTSTRAP: "true"
+      # ALLOW_ADMIN_BOOTSTRAP desligado por padrão (spec seção 4.2).
+      # Com o flag ligado e /api/auth/register público, qualquer novo registro
+      # sem papéis recebe automaticamente o papel Administrador (escalada de
+      # privilégio). Ligar APENAS em desenvolvimento local controlado e NUNCA
+      # em ambientes expostos a redes não-confiáveis.
+      ALLOW_ADMIN_BOOTSTRAP: "false"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
         condition: service_healthy

@@ -10,8 +10,10 @@ WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
-# JWT — override em produção via secrets/variável do orquestrador.
-ENV Jwt:Key=change-me-in-production-at-least-32-characters-long-please
+# JWT — a chave de assinatura NUNCA é baked na imagem.
+# Deve ser injetada em runtime via variável de ambiente (Jwt:Key) ou secret
+# manager. Program.cs lança InvalidOperationException se Jwt:Key não estiver
+# configurada — comportamento correto, não amenizar fornecendo default inseguro.
 ENV Jwt:Issuer=admin-api
 ENV Jwt:Audience=admin-mobile
 EXPOSE 8080
