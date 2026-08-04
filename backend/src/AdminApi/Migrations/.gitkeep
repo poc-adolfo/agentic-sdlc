@@ -1,0 +1,2 @@
+# EF Core migrations são geradas via: dotnet ef migrations add Init --project backend/src/AdminApi
+# O schema é criado automaticamente via db.Database.Migrate() no startup.

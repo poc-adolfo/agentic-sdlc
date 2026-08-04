@@ -1,0 +1,47 @@
+# docker-compose para desenvolvimento/demo local (seção 9 da spec).
+# Orquestra API + Postgres + preview web do Ionic. Sem recursos de cluster k3s.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: adminapi
+      POSTGRES_USER: adminapi
+      POSTGRES_PASSWORD: adminapi
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adminapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend/src/AdminApi
+      dockerfile: Dockerfile
+    environment:
+      ConnectionStrings__Default: "Host=postgres;Database=adminapi;Username=adminapi;Password=adminapi"
+      Jwt__Key: "dev-compose-not-for-production-use-at-least-32-chars!!"
+      Jwt__Issuer: "admin-api"
+      Jwt__Audience: "admin-mobile"
+      ALLOW_ADMIN_BOOTSTRAP: "true"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
