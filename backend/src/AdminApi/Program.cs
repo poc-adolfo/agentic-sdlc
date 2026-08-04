@@ -55,40 +55,56 @@ builder.Services.AddAuthentication(o =>
         };
     });
 
-// --- Authorization com policies dinâmicas a partir do catálogo de permissões ---
+// --- Authorization com policies dinamicas a partir do catalogo de permissoes ---
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddAuthorization(o =>
     {
-        // Registra uma policy por permissão do catálogo.
+        // Registra uma policy por permissao do catalogo.
         foreach (var perm in PermissionsCatalog.All)
         {
             o.AddPolicy(perm, policy => policy.Requirements.Add(new PermissionRequirement(perm)));
         }
     });
 
-// --- Serviços de domínio ---
+// --- Servicos de dominio ---
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<AdminSeeder>();
 
 // --- Swagger (apenas dev) ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddControllers();
+
+// --- CORS: permissivo em Development, restrito em Production ---
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+{
+    if (builder.Environment.IsProduction())
+    {
+        var origins = builder.Configuration["Cors:AllowedOrigins"];
+        if (!string.IsNullOrWhiteSpace(origins))
+            p.WithOrigins(origins.Split(',', StringSplitOptions.RemoveEmptyEntries))
+             .AllowAnyHeader().AllowAnyMethod();
+        else
+            p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    }
+    else
+    {
+        p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    }
+}));
 
 var app = builder.Build();
 
-// --- Migrate + seed na inicialização ---
+// --- Migrate + seed na inicializacao ---
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 
-    var sp = scope.ServiceProvider;
-    var seeder = ActivatorUtilities.CreateInstance<AdminSeeder>(sp);
+    var seeder = scope.ServiceProvider.GetRequiredService<AdminSeeder>();
     await seeder.SeedAsync();
 }
 
