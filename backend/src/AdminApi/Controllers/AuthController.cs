@@ -70,13 +70,14 @@ public class AuthController : ControllerBase
         if (user is null)
             return Unauthorized(new { error = "Invalid credentials" });
 
+        // Conta desativada não pode logar — checar ANTES de validar a senha,
+        // para não contabilizar tentativa de login (lockout) numa conta já inativa.
+        if (user.Status == UserStatus.Disabled)
+            return Forbid();
+
         var ok = await _signIn.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: true);
         if (!ok.Succeeded)
             return Unauthorized(new { error = "Invalid credentials" });
-
-        // Desativado não pode logar.
-        if (user.Status == UserStatus.Disabled)
-            return Forbid();
 
         user.LastLoginAt = DateTime.UtcNow;
         await _users.UpdateAsync(user);

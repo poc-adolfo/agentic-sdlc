@@ -82,20 +82,25 @@ public class RoleService : IRoleService
             .FirstOrDefaultAsync(x => x.Id == id);
         if (r is null) return false;
 
-        // Papéis is_system ficam em modo somente-leitura / aviso reforçado (seção 5).
-        // Aqui sincronizamos as permissões (adiciona e remove conforme a lista
-        // desejada) e logamos um aviso quando o papel é is_system. O aviso reforçado
-        // é responsabilidade da UI; o backend loga a operação.
-        if (r.IsSystem)
-            _log.LogWarning("Modifying permissions of SYSTEM role {RoleId} by {Actor}", id, actingUserId);
-
         var desired = dto.PermissionIds.ToHashSet();
 
-        // Remove permissions não presentes
-        foreach (var rp in r.RolePermissions.Where(rp => !desired.Contains(rp.PermissionId)).ToList())
-            _db.RolePermissions.Remove(rp);
+        // Papéis is_system só permitem ADICIONAR permissões, nunca remover
+        // (seção 5): protegemos contra a remoção de permissões de um papel de
+        // sistema, preservando o conjunto existente e apenas acrescentando as
+        // permissões novas solicitadas. Isso mantém o comentário acima
+        // consistente com o comportamento real do código.
+        if (!r.IsSystem)
+        {
+            // Remove permissions não presentes na lista desejada.
+            foreach (var rp in r.RolePermissions.Where(rp => !desired.Contains(rp.PermissionId)).ToList())
+                _db.RolePermissions.Remove(rp);
+        }
+        else
+        {
+            _log.LogWarning("SYSTEM role {RoleId}: permission removal blocked, only additions allowed (actor {Actor})", id, actingUserId);
+        }
 
-        // Adiciona permissions novas
+        // Adiciona permissions novas.
         var existing = r.RolePermissions.Select(rp => rp.PermissionId).ToHashSet();
         foreach (var perm in desired.Where(p => !existing.Contains(p)))
         {
