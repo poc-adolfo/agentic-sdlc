@@ -1,0 +1,42 @@
+# CI do backend .NET — build + testes da solution AdminApi.sln.
+# Adicionado como parte da revisão do PR #19 para garantir que mudanças
+# em backend/ passem por build e testes automatizados antes do merge.
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  build-and-test:
+    name: Build & Test (backend)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore AdminApi.sln
+
+      - name: Build
+        run: dotnet build AdminApi.sln --no-restore -c Release
+
+      - name: Test
+        run: dotnet test AdminApi.sln --no-build -c Release --verbosity normal
