@@ -1,5 +1,3 @@
-# docker-compose para desenvolvimento/demo local (seção 9 da spec).
-# Orquestra API + Postgres + preview web do Ionic. Sem recursos de cluster k3s.
 services:
   postgres:
     image: postgres:16-alpine

@@ -3,6 +3,7 @@ using AdminApi.Authorization;
 using AdminApi.Data;
 using AdminApi.Data.Entities;
 using AdminApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,8 @@ public class AuthController : ControllerBase
     public record RegisterDto(string Name, string Email, string Password);
     public record LoginDto(string Email, string Password);
     public record AuthResponse(string Token, bool BootstrappedAdmin, bool FlagActive);
+    public record MeResponse(Guid Id, string Name, string Email, string Status,
+        List<string> Roles, List<string> EffectivePermissions);
 
     /// <summary>Registro + login. Se users estiver vazia, vira admin (4.1).</summary>
     [HttpPost("register")]
@@ -90,6 +93,29 @@ public class AuthController : ControllerBase
 
         var token = await IssueTokenAsync(user);
         return Ok(new AuthResponse(token, shouldBootstrap && flagActive, flagActive));
+    }
+
+    /// <summary>Perfil do usuário autenticado — usado pelo app mobile para obter permissões efetivas.</summary>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<MeResponse>> Me()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId is null) return Unauthorized();
+
+        var u = await _db.Users.AsNoTracking()
+            .Include(x => x.UserRoles).ThenInclude(ur => ur.Role)
+                .ThenInclude(r => r.RolePermissions)
+            .FirstOrDefaultAsync(x => x.Id == Guid.Parse(userId));
+        if (u is null) return NotFound();
+
+        var roles = u.UserRoles.Select(ur => ur.Role.Name).ToList();
+        var perms = u.UserRoles
+            .SelectMany(ur => ur.Role.RolePermissions)
+            .Select(rp => rp.PermissionId)
+            .Distinct().ToList();
+
+        return Ok(new MeResponse(u.Id, u.Name, u.Email ?? "", u.Status.ToString(), roles, perms));
     }
 
     private async Task<string> IssueTokenAsync(User user)
