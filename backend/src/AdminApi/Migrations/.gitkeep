@@ -1,0 +1,8 @@
+# Migrations do EF Core.
+# A migration inicial (20260804120000_Init) está commitada neste diretório.
+# Para gerar novas migrations via ferramenta:
+#   dotnet ef migrations add <Nome> --project backend/src/AdminApi
+# Nota: como os snapshots de design-time (*.Designer.cs e
+# AppDbContextModelSnapshot.cs) não foram incluídos, regenere-os rodando
+# `dotnet ef migrations remove` (remove a Init manual) seguido de
+# `dotnet ef migrations add Init` para obter os snapshots automáticos.

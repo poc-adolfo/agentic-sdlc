@@ -1,0 +1,29 @@
+name: Backend build & test (.NET)
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: dotnet restore
+        run: dotnet restore AdminApi.sln
+
+      - name: dotnet build
+        run: dotnet build AdminApi.sln --no-restore --configuration Release
+
+      - name: dotnet test
+        run: dotnet test AdminApi.sln --no-build --configuration Release --logger "console;verbosity=normal"

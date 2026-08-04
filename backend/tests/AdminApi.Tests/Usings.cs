@@ -1,0 +1,14 @@
+global using Xunit;
+global using Moq;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Data.Sqlite;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using AdminApi.Data;
+global using AdminApi.Data.Entities;
+global using AdminApi.Services;
+global using AdminApi.Authorization;
+global using System.Net.Http.Json;

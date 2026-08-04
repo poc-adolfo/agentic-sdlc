@@ -1,0 +1,20 @@
+# Dockerfile da API .NET 8 (seção 9 — build multi-stage).
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/publish .
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+# JWT — a chave de assinatura NUNCA é baked na imagem.
+# Deve ser injetada em runtime via variável de ambiente (Jwt:Key) ou secret
+# manager. Program.cs lança InvalidOperationException se Jwt:Key não estiver
+# configurada — comportamento correto, não amenizar fornecendo default inseguro.
+ENV Jwt:Issuer=admin-api
+ENV Jwt:Audience=admin-mobile
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "AdminApi.dll"]
