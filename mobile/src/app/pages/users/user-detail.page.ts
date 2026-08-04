@@ -37,6 +37,8 @@ import { AuthService } from '../../services/auth.service';
           <ion-note color="medium">União das permissões dos papéis selecionados — atualizada em tempo real, antes de salvar.</ion-note>
           @if (previewLoading()) {
             <ion-text color="medium"><p>Calculando…</p></ion-text>
+          } @else if (previewError()) {
+            <ion-text color="danger"><p>{{ previewError() }}</p></ion-text>
           } @else if (previewPermissions().length === 0) {
             <ion-text color="medium"><p>Nenhuma permissão para a seleção atual.</p></ion-text>
           } @else {
@@ -80,6 +82,8 @@ export class UserDetailPage implements OnInit {
 
   previewPermissions = signal<string[]>([]);
   previewLoading = signal(false);
+  previewError = signal<string | null>(null);
+  private previewRequestId = 0;
 
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -133,21 +137,35 @@ export class UserDetailPage implements OnInit {
    * Resultado ordenado alfabeticamente para exibição estável.
    */
   private async updatePreview() {
+    const requestId = ++this.previewRequestId;
     const ids = [...(this.selectedRoles ?? [])];
     if (ids.length === 0) {
       this.previewPermissions.set([]);
+      this.previewError.set(null);
+      this.previewLoading.set(false);
       return;
     }
+
     this.previewLoading.set(true);
+    this.previewError.set(null);
     try {
       const details = await Promise.all(ids.map(id => this.api.getRole(id)));
       const union = new Set<string>();
       for (const d of details) {
         for (const p of d.permissions ?? []) union.add(p);
       }
-      this.previewPermissions.set([...union].sort((a, b) => a.localeCompare(b)));
+      if (requestId === this.previewRequestId) {
+        this.previewPermissions.set([...union].sort((a, b) => a.localeCompare(b)));
+      }
+    } catch {
+      if (requestId === this.previewRequestId) {
+        this.previewPermissions.set([]);
+        this.previewError.set('Não foi possível calcular a prévia de permissões. Tente novamente.');
+      }
     } finally {
-      this.previewLoading.set(false);
+      if (requestId === this.previewRequestId) {
+        this.previewLoading.set(false);
+      }
     }
   }
 }
