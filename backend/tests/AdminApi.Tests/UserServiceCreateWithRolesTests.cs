@@ -44,15 +44,23 @@ public class UserServiceCreateWithRolesTests : IAsyncLifetime
 
     private static UserManager<User> BuildUserManager(AppDbContext db)
     {
-        var userStore = new UserStore<User, Role, AppDbContext, Guid, UserRole, UserClaim>(db);
+        var userStore = new UserStore<User, Role, AppDbContext, Guid, UserClaim, UserRole,
+            IdentityUserLogin<Guid>, IdentityUserToken<Guid>, RoleClaim>(db);
         var validators = new List<IUserValidator<User>> { new UserValidator<User>() };
         var passwordValidators = new List<IPasswordValidator<User>> { new PasswordValidator<User>() };
         var normalizer = new UpperInvariantLookupNormalizer();
         var describer = new IdentityErrorDescriber();
         var hasher = new PasswordHasher<User>();
-        var logger = new LoggerFactory().CreateLogger<UserManager<User>>();
         return new UserManager<User>(
-            userStore, validators, passwordValidators, hasher, normalizer, describer, null, logger);
+            userStore,
+            new IdentityOptions(),
+            hasher,
+            validators,
+            passwordValidators,
+            normalizer,
+            describer,
+            null,
+            NullLogger<UserManager<User>>.Instance);
     }
 
     private static readonly Guid Actor = Guid.NewGuid();
@@ -69,7 +77,7 @@ public class UserServiceCreateWithRolesTests : IAsyncLifetime
 
         Assert.NotNull(detail);
         Assert.Contains("Editor", detail!.Roles);
-        Assert.Contains("Viewer", detail!.Roles);
+        Assert.Contains("Viewer", detail.Roles);
         Assert.Equal(2, detail.Roles.Count);
 
         // Confirma diretamente na tabela user_roles.
