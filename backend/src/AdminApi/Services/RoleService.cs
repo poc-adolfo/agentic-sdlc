@@ -18,8 +18,8 @@ public class RoleService : IRoleService
     public async Task<List<RoleListItem>> ListAsync()
     {
         return await _db.Roles.AsNoTracking()
-            .Select(r => new RoleListItem(r.Id, r.Name, r.Description, r.IsSystem))
             .OrderBy(r => r.Name)
+            .Select(r => new RoleListItem(r.Id, r.Name, r.Description, r.IsSystem))
             .ToListAsync();
     }
 

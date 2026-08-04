@@ -12,8 +12,7 @@ namespace AdminApi.Data;
 /// implícito do EF) para permitir metadados futuros (granted_at, granted_by).
 /// </summary>
 public class AppDbContext : IdentityDbContext<User, Role, Guid,
-    UserClaim, UserRole, RoleClaim, IdentityUserLogin<Guid>,
-    IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
+    UserClaim, UserRole, IdentityUserLogin<Guid>, RoleClaim, IdentityUserToken<Guid>>
 {
     public AppDbContext(DbContextOptions<AppDbContext> opt) : base(opt) { }
 
