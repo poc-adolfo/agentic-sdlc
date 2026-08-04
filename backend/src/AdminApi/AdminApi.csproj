@@ -22,4 +22,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="AdminApi.Tests" />
+  </ItemGroup>
+
 </Project>
