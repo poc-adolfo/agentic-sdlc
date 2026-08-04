@@ -22,14 +22,20 @@ public class CustomWebApplicationFactory : WebApplicationFactory<global::Program
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+
+        // UseSetting writes directly to the IWebHostBuilder settings and makes
+        // the test signing key available early enough for minimal-hosting
+        // configuration (Program.cs) before appsettings.json can supply its
+        // intentionally empty production value.
+        builder.UseSetting("Jwt:Key", "TestJwtSigningKey_Min32Chars_Enough!!");
+
         builder.ConfigureAppConfiguration((_, cfg) =>
         {
             cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ALLOW_ADMIN_BOOTSTRAP"] = AllowBootstrap ? "true" : "false",
-                // Chave de assinatura JWT para os testes de integração.
-                // Em Development o appsettings vem vazio (""), o que inviabiliza
-                // a emissão de tokens — aqui garantimos uma chave válida fixa.
+                // Keep this override for components that read the application
+                // configuration after the host has been built.
                 ["Jwt:Key"] = "TestJwtSigningKey_Min32Chars_Enough!!",
             });
         });
