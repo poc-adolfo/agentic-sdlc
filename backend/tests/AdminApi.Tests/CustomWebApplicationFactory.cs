@@ -6,6 +6,7 @@ namespace AdminApi.Tests;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<global::Program>
 {
+    private const string TestJwtSigningKey = "TestJwtSigningKey_Min32Chars_Enough!!";
     private readonly SqliteConnection _connection;
 
     public bool AllowBootstrap { get; set; }
@@ -19,11 +20,18 @@ public class CustomWebApplicationFactory : WebApplicationFactory<global::Program
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+
+        // UseSetting is applied early enough for minimal-hosting Program.cs to see
+        // the signing key while it configures authentication and JWT services.
+        builder.UseSetting("Jwt:Key", TestJwtSigningKey);
         builder.ConfigureAppConfiguration((_, cfg) =>
         {
             cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ALLOW_ADMIN_BOOTSTRAP"] = AllowBootstrap ? "true" : "false",
+                // Keep the in-memory value as a fallback for configuration paths
+                // that are evaluated after ConfigureAppConfiguration runs.
+                ["Jwt:Key"] = TestJwtSigningKey,
             });
         });
         builder.ConfigureTestServices(services =>
